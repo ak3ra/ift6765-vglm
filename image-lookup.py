@@ -3,9 +3,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
 import nltk
-import random
-# from nltk.corpus import stopwords
-# nltk.download('stopwords')
+
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
 from nltk.stem import WordNetLemmatizer
@@ -124,5 +122,3 @@ for idx, cap in enumerate(captionList):
 
 pickle.dump(cap2ids,open(cap2image_file,"wb"))
 print("data process finished!")
-# print(len(cap2ids))
-# print(total_img)
