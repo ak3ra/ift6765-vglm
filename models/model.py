@@ -163,12 +163,11 @@ class SimpleBertForMaskedLM_Vis(BertForMaskedLM):
             encoder_hidden_states=encoder_hidden_states,
             encoder_attention_mask=encoder_attention_mask,
         )
-
-        voken=getVisFeature(input_ids)
         sequence_output = outputs[0] # token embeddings
-        
+
+        visual_features = getVisFeature(input_ids)
         voken_predictions = self.visual_reg_head(sequence_output)
-        voken_reg_loss = self.voken_reg_loss_fct(voken_predictions, voken)
+        voken_reg_loss = self.voken_reg_loss_fct(voken_predictions, visual_features)
         voken_reg_loss=voken_reg_loss.sum(-1).mean()
 
         obj_prediction_scores = self.visual_cls_head(sequence_output)
@@ -178,4 +177,5 @@ class SimpleBertForMaskedLM_Vis(BertForMaskedLM):
         prediction_scores = self.cls(sequence_output)
         loss_fct = CrossEntropyLoss()
         token_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), masked_lm_labels.view(-1))
+        
         return token_loss+voken_reg_loss+visual_cls_loss,
