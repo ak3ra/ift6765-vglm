@@ -165,17 +165,17 @@ class SimpleBertForMaskedLM_Vis(BertForMaskedLM):
         )
         sequence_output = outputs[0] # token embeddings
 
-        visual_features = getVisFeature(input_ids)
-        voken_predictions = self.visual_reg_head(sequence_output)
-        voken_reg_loss = self.voken_reg_loss_fct(voken_predictions, visual_features)
-        voken_reg_loss=voken_reg_loss.sum(-1).mean()
+        # visual_features = getVisFeature(input_ids)
+        # voken_predictions = self.visual_reg_head(sequence_output)
+        # voken_reg_loss = self.voken_reg_loss_fct(voken_predictions, visual_features)
+        # voken_reg_loss=voken_reg_loss.sum(-1).mean()
 
-        obj_prediction_scores = self.visual_cls_head(sequence_output)
-        obj_labels = getVisLabels(input_ids)
-        visual_cls_loss = self.visual_cls_loss_fct(obj_prediction_scores.view(-1,10),obj_labels.view(-1))
+        # obj_prediction_scores = self.visual_cls_head(sequence_output)
+        # obj_labels = getVisLabels(input_ids)
+        # visual_cls_loss = self.visual_cls_loss_fct(obj_prediction_scores.view(-1,10),obj_labels.view(-1))
 
         prediction_scores = self.cls(sequence_output)
         loss_fct = CrossEntropyLoss()
         token_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), masked_lm_labels.view(-1))
         
-        return token_loss+voken_reg_loss+visual_cls_loss,
+        return token_loss
