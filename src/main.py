@@ -91,6 +91,6 @@ def main():
             #     model.zero_grad()
             #     global_step += 1
 
-
+    torch.save(model.state_dict(), 'trained_model.pth')
 if __name__ == '__main__':
     main()
