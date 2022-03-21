@@ -43,6 +43,8 @@ def main():
 
     config = CoLBertConfig.from_pretrained('./vokenization/vlm/configs/bert-6L-512H.json', cache_dir='./test',voken_dim=1024)
     model = SimpleBertForMaskedLM_Vis(config=config,tokenizer=tokenizer)
+    model.to(device)
+
     global_step = 0
     epochs_trained = 0
     num_train_epochs = 2
@@ -95,8 +97,8 @@ def main():
         for step, batch in enumerate(epoch_iterator):
 
             inputs, labels = mask_tokens(batch, tokenizer, mlm_probability) if mlm_probability else (batch, batch)
-            # inputs = inputs.to(args.device)
-            # labels = labels.to(args.device)
+            inputs = inputs.to(device)
+            labels = labels.to(device)
             # If some of the input is padded, then the attention mask is needed
             attention_mask = (inputs != tokenizer.pad_token_id)         # word_tokens --> 1, pad_token --> 0
             if attention_mask.all():
