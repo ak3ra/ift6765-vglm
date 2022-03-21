@@ -10,6 +10,9 @@ from transformers import (
 
 from data import CoLDataset
 from model import CoLBertConfig, SimpleBertForMaskedLM_Vis, mask_tokens
+import wandb 
+wandb.init(project="vglm")
+
 
 def main():
 
@@ -73,6 +76,8 @@ def main():
             optimizer.step()
             model.zero_grad()
             # logger.info(" Training loss : %0.4f" % (loss.item()))
+            wandb.log({'training loss': loss.item()})
+
             tr_loss += loss.item()
             print(loss.item())
             # if (step + 1) % args.gradient_accumulation_steps == 0:
