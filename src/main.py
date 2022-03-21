@@ -6,6 +6,7 @@ from tqdm import tqdm, trange
 from transformers import (
     AdamW,
     BertTokenizer,
+    get_linear_schedule_with_warmup,
 )
 
 from data import CoLDataset
@@ -33,6 +34,13 @@ def main():
     epochs_trained = 0
     num_train_epochs = 40
     mlm_probability =0.15
+    warmup_steps = 10000
+    gradient_accumulation_steps = 2
+    t_total = num_train_epochs*gradient_accumulation_steps
+    max_grad_norm = 1.0
+    adam_epsilon = 1e-6
+
+    
         # Prepare optimizer and schedule (linear warmup and decay)
     no_decay = ["bias", "LayerNorm.weight"]
     optimizer_grouped_parameters = [
@@ -44,8 +52,12 @@ def main():
     ]
     optimizer = AdamW(optimizer_grouped_parameters,
                     lr=2e-4,
+                    eps=adam_epsilon
                     )
 
+    scheduler = get_linear_schedule_with_warmup(
+            optimizer, num_warmup_steps=warmup_steps, num_training_steps=t_total
+        )
 
     model.zero_grad()
     train_iterator = trange(
@@ -79,16 +91,13 @@ def main():
 
             tr_loss += loss.item()
             print(loss.item())
-            # if (step + 1) % args.gradient_accumulation_steps == 0:
-            #     if args.max_grad_norm > 0.:
-            #         if args.fp16:
-            #             total_norm = torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.max_grad_norm)
-            #         else:
-            #             total_norm =torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
-            #     optimizer.step()
-            #     scheduler.step()  # Update learning rate schedule
-            #     model.zero_grad()
-            #     global_step += 1
+            if (step + 1) % gradient_accumulation_steps == 0:
+                if max_grad_norm > 0.:
+                    total_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
+                optimizer.step()
+                scheduler.step()  # Update learning rate schedule
+                model.zero_grad()
+                global_step += 1
         wandb.log({'training loss': loss.item()})
 
     torch.save(model.state_dict(), 'trained_model.pth')
