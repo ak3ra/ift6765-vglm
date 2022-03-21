@@ -128,9 +128,9 @@ def main():
 
 
 
-    checkpoint_name = "checkpoint-epoch%04d" % epoch
-    save_model(checkpoint_name, model, tokenizer, optimizer, scheduler,output_path)
-    evaluate(model,tokenizer,mlm)
+        checkpoint_name = "checkpoint-epoch%04d" % epoch
+        save_model(checkpoint_name, model, tokenizer, optimizer, scheduler,output_path)
+        evaluate(model,tokenizer,mlm)
 
 
 def save_model(name, model, tokenizer, optimizer, scheduler,output_path):
