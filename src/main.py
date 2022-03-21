@@ -54,7 +54,7 @@ def main():
     t_total = num_train_epochs*gradient_accumulation_steps
     max_grad_norm = 1.0
     adam_epsilon = 1e-6
-    output_dir = "output"
+    output_path = "./output"
     shuffle = True
     mlm = True
 
@@ -129,13 +129,13 @@ def main():
 
 
     checkpoint_name = "checkpoint-epoch%04d" % epoch
-    save_model(checkpoint_name, model, tokenizer, optimizer, scheduler)
-    evaluate(model,tokenizer)
+    save_model(checkpoint_name, model, tokenizer, optimizer, scheduler,output_path)
+    evaluate(model,tokenizer,mlm)
 
 
-def save_model(name, model, tokenizer, optimizer, scheduler):
+def save_model(name, model, tokenizer, optimizer, scheduler,output_path):
     # Save model checkpoint
-    output_dir = os.path.join(output_dir, name)
+    output_dir = os.path.join(output_path, name)
     os.makedirs(output_dir, exist_ok=True)
     model_to_save = (
         model.module if hasattr(model, "module") else model
@@ -146,7 +146,7 @@ def save_model(name, model, tokenizer, optimizer, scheduler):
     torch.save(os.path.join(output_dir, "training_args.bin"))
     logger.info("Saving model checkpoint to %s", output_dir)
 
-def evaluate(model: PreTrainedModel, tokenizer: PreTrainedTokenizer, prefix="") -> Dict:
+def evaluate(model, tokenizer,mlm=True, prefix="") -> Dict:
 
     eval_dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.valid.raw', 'bert-base-uncased', tokenizer, block_size=126)
     eval_batch_size = 32
