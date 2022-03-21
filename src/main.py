@@ -15,11 +15,13 @@ from transformers import (
     AdamW,
     BertTokenizer,
     get_linear_schedule_with_warmup,
+    PreTrainedModel,
+    PreTrainedTokenizer,
 )
 
 from data import CoLDataset
 from model import CoLBertConfig, SimpleBertForMaskedLM_Vis, mask_tokens
-import wandb 
+import wandb
 wandb.init(project="vglm")
 
 logger = logging.getLogger(__name__)
@@ -28,14 +30,14 @@ def main():
 
 
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    train_dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.train.raw', 'bert-base-uncased', tokenizer, block_size=126)
+    train_dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.test.raw', 'bert-base-uncased', tokenizer, block_size=126)
 
     def collate(examples: List[torch.Tensor]):
         if tokenizer._pad_token is None:
             return pad_sequence(examples, batch_first=True)
         return pad_sequence(examples, batch_first=True, padding_value=tokenizer.pad_token_id)
 
-    
+
     config = CoLBertConfig.from_pretrained('./vokenization/vlm/configs/bert-6L-512H.json', cache_dir='./test',voken_dim=1024)
     model = SimpleBertForMaskedLM_Vis(config=config,tokenizer=tokenizer)
     global_step = 0
@@ -49,16 +51,16 @@ def main():
     adam_epsilon = 1e-6
     output_dir = "output"
     shuffle = True
-    
+
     train_sampler = RandomSampler(
             train_dataset
         )
 
     train_dataloader=DataLoader(
         train_dataset, shuffle=False, num_workers=0,
-        batch_size=32, pin_memory=True, sampler=train_sampler
+        batch_size=64, pin_memory=True, sampler=train_sampler
     )
-    
+
         # Prepare optimizer and schedule (linear warmup and decay)
     no_decay = ["bias", "LayerNorm.weight"]
     optimizer_grouped_parameters = [
@@ -118,8 +120,8 @@ def main():
                 global_step += 1
         wandb.log({'training loss': loss.item()})
 
-    
-    
+
+
     checkpoint_name = "checkpoint-epoch%04d" % epoch
     save_model(checkpoint_name, model, tokenizer, optimizer, scheduler)
     evaluate(model,tokenizer)
@@ -180,7 +182,7 @@ def evaluate(model: PreTrainedModel, tokenizer: PreTrainedTokenizer, prefix="") 
     perplexity = torch.exp(torch.tensor(eval_loss)).item()
 
     result = {"perplexity": perplexity}
-    
+
     wandb.log({'eval loss': eval_loss})
     wandb.log({'perplexity': perplexity})
 
