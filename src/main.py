@@ -17,7 +17,7 @@ wandb.init(project="vglm")
 def main():
 
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.test.raw', 'bert-base-uncased', tokenizer, block_size=512)
+    dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.test.raw', 'bert-base-uncased', tokenizer, block_size=126)
     # train_dataloader = DataLoader(
     #         dataset,batch_size=2
     #     )
