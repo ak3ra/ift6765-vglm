@@ -1,10 +1,14 @@
-dataset/
+data/
+dataset/*
+
 *.ipynb
 dataset/Images/
 dataset/captions.txt
 dataset/flickr30k.zip
 
+venv/
 
 ## cache files
 
 **/__pycache__/
+
