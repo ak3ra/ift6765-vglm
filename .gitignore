@@ -3,3 +3,8 @@ dataset/
 dataset/Images/
 dataset/captions.txt
 dataset/flickr30k.zip
+
+
+## cache files
+
+**/__pycache__/
