@@ -10,7 +10,7 @@ class CoLDataset(Dataset):
     IGNORE_ID = -100
     sent_strategy = 'first'
 
-    def __init__(self, file_path, tokenizer_name, tokenizer, block_size=512,
+    def __init__(self, file_path, tokenizer_name, tokenizer, block_size=126,
                  split_sent=False, voken_dir=None, suffix=None, verbose=False,
                  voken_ablation=None):
 
@@ -60,9 +60,8 @@ class CoLDataset(Dataset):
     def __getitem__(self, item):
         token_start, token_end = self.batches[item]
         tokens = list(self.tokens[token_start: token_end])
-        token_tensor = torch.tensor(tokens,dtype=torch.long)
-        # token_tensor = torch.tensor(
-        #     self.tokenizer.build_inputs_with_special_tokens(tokens),
-        #     dtype=torch.long) # This might be problematic. ignore and CLS, and SEP tokens.
+        token_tensor = torch.tensor(
+            self.tokenizer.build_inputs_with_special_tokens(tokens),
+            dtype=torch.long) # This might be problematic. ignore and CLS, and SEP tokens.
  
         return token_tensor
