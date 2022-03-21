@@ -1,5 +1,9 @@
 import copy
 import torch
+import os
+import torch
+import logging
+
 from torch.utils.data import DataLoader
 from torch import nn
 import torch.nn.functional as F
@@ -15,6 +19,7 @@ from model import CoLBertConfig, SimpleBertForMaskedLM_Vis, mask_tokens
 import wandb 
 wandb.init(project="vglm")
 
+logger = logging.getLogger(__name__)
 
 def main():
 
@@ -40,6 +45,8 @@ def main():
     t_total = num_train_epochs*gradient_accumulation_steps
     max_grad_norm = 1.0
     adam_epsilon = 1e-6
+    output_dir = "output"
+
 
     
         # Prepare optimizer and schedule (linear warmup and decay)
@@ -101,6 +108,24 @@ def main():
                 global_step += 1
         wandb.log({'training loss': loss.item()})
 
-    torch.save(model.state_dict(), 'trained_model.pth')
+    
+    
+    checkpoint_name = "checkpoint-epoch%04d" % epoch
+    save_model(checkpoint_name, model, tokenizer, optimizer, scheduler)
+
+
+def save_model(name, model, tokenizer, optimizer, scheduler):
+    # Save model checkpoint
+    output_dir = os.path.join(output_dir, name)
+    os.makedirs(output_dir, exist_ok=True)
+    model_to_save = (
+        model.module if hasattr(model, "module") else model
+    )  # Take care of distributed/parallel training
+    model_to_save.save_pretrained(output_dir)
+    tokenizer.save_pretrained(output_dir)
+
+    torch.save(os.path.join(output_dir, "training_args.bin"))
+    logger.info("Saving model checkpoint to %s", output_dir)
+
 if __name__ == '__main__':
     main()
