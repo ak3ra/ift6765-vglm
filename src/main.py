@@ -35,7 +35,7 @@ def main():
     optimizer_grouped_parameters = [
         {
             "params": [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
-            "weight_decay": 0.01, 
+            "weight_decay": 0.01,
         },
         {"params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], "weight_decay": 0.0},
     ]
@@ -54,7 +54,7 @@ def main():
         epoch_iterator = tqdm(train_dataloader, desc="Iteration")
 
         for step, batch in enumerate(epoch_iterator):
-        
+
             inputs, labels = mask_tokens(batch, tokenizer, mlm_probability) if mlm_probability else (batch, batch)
             # inputs = inputs.to(args.device)
             # labels = labels.to(args.device)
@@ -67,7 +67,7 @@ def main():
             outputs = model(inputs,
                             attention_mask=attention_mask,
                             masked_lm_labels=labels) if mlm_probability else model(inputs, labels=labels)
-            loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
+            loss = outputs  # model outputs are always tuple in transformers (see doc)
 
             loss.backward()
             optimizer.step()

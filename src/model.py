@@ -87,7 +87,7 @@ def getVisLabels(input_ids):
    block_size = input_ids.shape[1]
    return torch.ones(batch_size,block_size,dtype=torch.long)
 
-  
+
 class BertVLMRegressionHead(nn.Module):
     """Bert Head for masked language modeling."""
 
@@ -136,7 +136,7 @@ class SimpleBertForMaskedLM_Vis(BertForMaskedLM):
         super().__init__(config)
         self.tokenizer = tokenizer
         self.visual_reg_head = BertVLMRegressionHead(config)
-        self.visual_cls_head = BertVLMClassificationHead(config)
+        #self.visual_cls_head = BertVLMClassificationHead(config)
         self.visual_cls_loss_fct = nn.CrossEntropyLoss()
         self.voken_reg_loss_fct = nn.SmoothL1Loss(reduction='none')
 
@@ -177,5 +177,6 @@ class SimpleBertForMaskedLM_Vis(BertForMaskedLM):
         prediction_scores = self.cls(sequence_output)
         loss_fct = CrossEntropyLoss()
         token_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), masked_lm_labels.view(-1))
-        
+
+        print(token_loss)
         return token_loss
