@@ -26,6 +26,9 @@ wandb.init(project="vglm")
 
 logger = logging.getLogger(__name__)
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print('Using device:', device)
+
 def main():
 
 
@@ -51,6 +54,7 @@ def main():
     adam_epsilon = 1e-6
     output_dir = "output"
     shuffle = True
+    mlm = True
 
     train_sampler = RandomSampler(
             train_dataset
@@ -158,22 +162,22 @@ def evaluate(model: PreTrainedModel, tokenizer: PreTrainedTokenizer, prefix="") 
     # Eval!
     logger.info("***** Running evaluation {} *****".format(prefix))
     logger.info("  Num examples = %d", len(eval_dataset))
-    logger.info("  Batch size = %d", args.eval_batch_size)
+    logger.info("  Batch size = %d", eval_batch_size)
     eval_loss = 0.0
     nb_eval_steps = 0
     model.eval()
 
     for batch in tqdm(eval_dataloader, desc="Evaluating"):
-        inputs, labels = mask_tokens(batch, tokenizer, args) if args.mlm else (batch, batch)
-        inputs = inputs.to(args.device)
-        labels = labels.to(args.device)
+        inputs, labels = mask_tokens(batch, tokenizer) if mlm else (batch, batch)
+        inputs = inputs.to(device)
+        labels = labels.to(device)
         # If some of the input is padded, then the attention mask is needed
         attention_mask = (inputs != tokenizer.pad_token_id)  # word_tokens --> 1, pad_token --> 0
         if attention_mask.all():
             attention_mask = None
 
         with torch.no_grad():
-            outputs = model(inputs, attention_mask=attention_mask, masked_lm_labels=labels) if args.mlm else model(inputs, labels=labels)
+            outputs = model(inputs, attention_mask=attention_mask, masked_lm_labels=labels) if mlm else model(inputs, labels=labels)
             lm_loss = outputs[0]
             eval_loss += lm_loss.mean().item()
         nb_eval_steps += 1
