@@ -31,7 +31,7 @@ def main():
     model = SimpleBertForMaskedLM_Vis(config=config,tokenizer=tokenizer)
     global_step = 0
     epochs_trained = 0
-    num_train_epochs = 1
+    num_train_epochs = 40
     mlm_probability =0.15
         # Prepare optimizer and schedule (linear warmup and decay)
     no_decay = ["bias", "LayerNorm.weight"]
@@ -76,7 +76,6 @@ def main():
             optimizer.step()
             model.zero_grad()
             # logger.info(" Training loss : %0.4f" % (loss.item()))
-            wandb.log({'training loss': loss.item()})
 
             tr_loss += loss.item()
             print(loss.item())
@@ -90,6 +89,7 @@ def main():
             #     scheduler.step()  # Update learning rate schedule
             #     model.zero_grad()
             #     global_step += 1
+        wandb.log({'training loss': loss.item()})
 
     torch.save(model.state_dict(), 'trained_model.pth')
 if __name__ == '__main__':
