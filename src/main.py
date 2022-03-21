@@ -4,7 +4,10 @@ import torch
 import logging
 
 from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampler
 from torch import nn
+from typing import Dict, List, Tuple
+from torch.nn.utils.rnn import pad_sequence
 import torch.nn.functional as F
 from tqdm import tqdm, trange
 from transformers import (
@@ -22,17 +25,16 @@ logger = logging.getLogger(__name__)
 
 def main():
 
+
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.test.raw', 'bert-base-uncased', tokenizer, block_size=126)
-    # train_dataloader = DataLoader(
-    #         dataset,batch_size=2
-    #     )
+    train_dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.train.raw', 'bert-base-uncased', tokenizer, block_size=126)
 
-    train_dataloader=DataLoader(
-        dataset, shuffle=False, num_workers=0,
-        batch_size=2, pin_memory=True
-    )
+    def collate(examples: List[torch.Tensor]):
+        if tokenizer._pad_token is None:
+            return pad_sequence(examples, batch_first=True)
+        return pad_sequence(examples, batch_first=True, padding_value=tokenizer.pad_token_id)
 
+    
     config = CoLBertConfig.from_pretrained('./vokenization/vlm/configs/bert-6L-512H.json', cache_dir='./test',voken_dim=1024)
     model = SimpleBertForMaskedLM_Vis(config=config,tokenizer=tokenizer)
     global_step = 0
@@ -45,8 +47,16 @@ def main():
     max_grad_norm = 1.0
     adam_epsilon = 1e-6
     output_dir = "output"
+    shuffle = True
+    
+    train_sampler = RandomSampler(
+            train_dataset
+        )
 
-
+    train_dataloader=DataLoader(
+        train_dataset, shuffle=False, num_workers=0,
+        batch_size=32, pin_memory=True, sampler=train_sampler
+    )
     
         # Prepare optimizer and schedule (linear warmup and decay)
     no_decay = ["bias", "LayerNorm.weight"]
@@ -111,6 +121,7 @@ def main():
     
     checkpoint_name = "checkpoint-epoch%04d" % epoch
     save_model(checkpoint_name, model, tokenizer, optimizer, scheduler)
+    evaluate(model,tokenizer)
 
 
 def save_model(name, model, tokenizer, optimizer, scheduler):
@@ -125,6 +136,54 @@ def save_model(name, model, tokenizer, optimizer, scheduler):
 
     torch.save(os.path.join(output_dir, "training_args.bin"))
     logger.info("Saving model checkpoint to %s", output_dir)
+
+def evaluate(model: PreTrainedModel, tokenizer: PreTrainedTokenizer, prefix="") -> Dict:
+
+    eval_dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.valid.raw', 'bert-base-uncased', tokenizer, block_size=126)
+    eval_batch_size = 32
+
+    def collate(examples: List[torch.Tensor]):
+        if tokenizer._pad_token is None:
+            return pad_sequence(examples, batch_first=True)
+        return pad_sequence(examples, batch_first=True, padding_value=tokenizer.pad_token_id)
+
+    eval_sampler = SequentialSampler(eval_dataset)
+    eval_dataloader = DataLoader(
+        eval_dataset, sampler=eval_sampler, batch_size=eval_batch_size, collate_fn=collate
+    )
+
+    # Eval!
+    logger.info("***** Running evaluation {} *****".format(prefix))
+    logger.info("  Num examples = %d", len(eval_dataset))
+    logger.info("  Batch size = %d", args.eval_batch_size)
+    eval_loss = 0.0
+    nb_eval_steps = 0
+    model.eval()
+
+    for batch in tqdm(eval_dataloader, desc="Evaluating"):
+        inputs, labels = mask_tokens(batch, tokenizer, args) if args.mlm else (batch, batch)
+        inputs = inputs.to(args.device)
+        labels = labels.to(args.device)
+        # If some of the input is padded, then the attention mask is needed
+        attention_mask = (inputs != tokenizer.pad_token_id)  # word_tokens --> 1, pad_token --> 0
+        if attention_mask.all():
+            attention_mask = None
+
+        with torch.no_grad():
+            outputs = model(inputs, attention_mask=attention_mask, masked_lm_labels=labels) if args.mlm else model(inputs, labels=labels)
+            lm_loss = outputs[0]
+            eval_loss += lm_loss.mean().item()
+        nb_eval_steps += 1
+
+    eval_loss = eval_loss / nb_eval_steps
+    perplexity = torch.exp(torch.tensor(eval_loss)).item()
+
+    result = {"perplexity": perplexity}
+    
+    wandb.log({'eval loss': eval_loss})
+    wandb.log({'perplexity': perplexity})
+
+    return result
 
 if __name__ == '__main__':
     main()
