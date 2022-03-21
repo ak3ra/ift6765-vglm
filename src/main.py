@@ -180,7 +180,7 @@ def evaluate(model, tokenizer,mlm=True, prefix="") -> Dict:
 
         with torch.no_grad():
             outputs = model(inputs, attention_mask=attention_mask, masked_lm_labels=labels) if mlm else model(inputs, labels=labels)
-            lm_loss = outputs[0]
+            lm_loss = outputs
             eval_loss += lm_loss.mean().item()
         nb_eval_steps += 1
 
