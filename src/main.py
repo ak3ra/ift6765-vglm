@@ -40,7 +40,7 @@ def main():
     model = SimpleBertForMaskedLM_Vis(config=config,tokenizer=tokenizer)
     global_step = 0
     epochs_trained = 0
-    num_train_epochs = 40
+    num_train_epochs = 2
     mlm_probability =0.15
     warmup_steps = 10000
     gradient_accumulation_steps = 2
