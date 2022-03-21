@@ -143,7 +143,7 @@ def save_model(name, model, tokenizer, optimizer, scheduler,output_path):
     model_to_save.save_pretrained(output_dir)
     tokenizer.save_pretrained(output_dir)
 
-    torch.save(os.path.join(output_dir, "training_args.bin"))
+    # torch.save(os.path.join(output_dir, "training_args.bin"))
     logger.info("Saving model checkpoint to %s", output_dir)
 
 def evaluate(model, tokenizer,mlm=True, prefix="") -> Dict:
