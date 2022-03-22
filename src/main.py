@@ -24,7 +24,6 @@ from model import CoLBertConfig, SimpleBertForMaskedLM_Vis, mask_tokens
 import wandb
 wandb.init(project="vglm")
 
-print('test')
 logger = logging.getLogger(__name__)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
