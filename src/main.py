@@ -15,8 +15,6 @@ from transformers import (
     AdamW,
     BertTokenizer,
     get_linear_schedule_with_warmup,
-    PreTrainedModel,
-    PreTrainedTokenizer,
 )
 
 from data import CoLDataset
