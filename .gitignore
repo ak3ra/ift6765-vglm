@@ -4,7 +4,10 @@ dataset/Images/
 dataset/captions.txt
 dataset/flickr30k.zip
 
+*cpython*
 
 ## cache files
 
-**/__pycache__/
+__pycache__/
+
+venv/
