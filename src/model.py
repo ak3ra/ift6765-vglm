@@ -11,18 +11,13 @@ import torch.nn.functional as F
 from tqdm import tqdm, trange
 
 from transformers import (
-    MODEL_WITH_LM_HEAD_MAPPING,
-    WEIGHTS_NAME,
-    AdamW,
     AutoConfig,
     AutoModelWithLMHead,
-    AutoTokenizer,
+    AutoModel,
+    AutoModelForMaskedLM,
     BertConfig,
     BertForMaskedLM,
-    BertTokenizer,
-    PreTrainedModel,
-    PreTrainedTokenizer,
-    get_linear_schedule_with_warmup,
+
 )
 
 
@@ -72,7 +67,7 @@ class CoLBertConfig(BertConfig):
         self.voken_dim = None
         self.do_voken_cls = False
         self.do_voken_reg = False
-        self.do_voken_ctr = False
+        # self.do_voken_ctr = False
         self.shared_head = False
         self.verbose = False
 
@@ -106,7 +101,6 @@ class BertVLMRegressionHead(nn.Module):
         x = self.decoder(x)
 
         return x
-
 
 class BertVLMClassificationHead(nn.Module):
     """Bert Head for masked language modeling."""
@@ -180,3 +174,94 @@ class SimpleBertForMaskedLM_Vis(BertForMaskedLM):
 
         print(token_loss)
         return token_loss
+
+
+
+class BertForMaskedVisLan(nn.Module):
+
+    def __init__(self, model_checkpoint,config,tokenizer):
+        super(BertForMaskedVisLan,self).__init__()
+        self.bert = AutoModel.from_pre_trained(model_checkpoint)
+        self.tokenizer = tokenizer
+
+        self.do_voken_cls = config.do_voken_cls
+        self.do_voken_reg = config.do_voken_reg
+
+        self.token_cls_loss_fct = CrossEntropyLoss()
+
+
+        if config.do_voken_reg:
+            self.visual_reg_head = BertVLMRegressionHead(config)
+            self.voken_reg_loss_fct = nn.SmoothL1Loss(reduction='none')
+        
+        if config.do_voken_cls:
+            self.visual_cls_head = BertVLMClassificationHead(config)
+            self.visual_cls_loss_fct = nn.CrossEntropyLoss()
+
+    def forward(
+            self,
+            input_ids=None,
+            attention_mask=None,
+            token_type_ids=None,
+            position_ids=None,
+            head_mask=None,
+            inputs_embeds=None,
+            masked_lm_labels=None,
+            encoder_hidden_states=None,
+            encoder_attention_mask=None,
+            lm_labels=None,
+            voken_labels=None,
+            voken_features=None,
+    ):
+        outputs = self.bert(
+            input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds,
+            encoder_hidden_states=encoder_hidden_states,
+            encoder_attention_mask=encoder_attention_mask,
+        )
+        sequence_output = outputs[0] # token embeddings
+
+        voken_loss = 0.0
+        if self.do_voken_cls:
+            assert voken_labels is not None
+            voken_scores = self.visual_cls_head(sequence_output)
+            voken_cls_loss = self.voken_cls_loss_fct(voken_scores.view(-1, self.config.voken_size), voken_labels.view(-1))
+            voken_loss += voken_cls_loss
+
+        if self.do_voken_reg:
+            assert voken_features is not None
+            assert voken_labels is not None
+
+            # visual_features = getVisFeature(input_ids)
+            voken_predictions = self.visual_reg_head(sequence_output)
+            voken_reg_loss = self.voken_reg_loss_fct(voken_predictions, voken_features)
+            voken_reg_loss=voken_reg_loss.sum(-1).mean()
+            # voken_prediction = self.visual_reg_head(sequence_output)
+
+            # # Get the mask and pre-trained features
+            # voken_label_mask = (voken_labels != -100)               # Get a mask of [0, 1, 1, ...., 1, 0], [b, len]
+            # safe_voken_labels = voken_labels.clone()
+            # safe_voken_labels[~voken_label_mask] = 0
+            # voken_feats = self.voken_feat_emb(safe_voken_labels)         # [b, len] --> [b, len, f]
+
+            # # Loss
+            # voken_reg_loss = self.voken_reg_loss_fct(voken_prediction, voken_feats)   # [b, len, f]
+
+            # # [b, l, f] * ([b,l] --> [b, l, 1]) = [b, l, f]
+            # voken_reg_loss = (voken_reg_loss * voken_label_mask.float().unsqueeze(-1))
+
+            # # [b, l, f] --sum-> [b, l] --mean-> [1,]
+            # voken_reg_loss = voken_reg_loss.sum(-1).mean()
+
+            voken_loss += voken_reg_loss
+
+        prediction_scores = self.cls(sequence_output)
+        loss_fct = CrossEntropyLoss()
+        token_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), masked_lm_labels.view(-1))
+
+        # print(token_loss)
+        return token_loss,voken_loss
