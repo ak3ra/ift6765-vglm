@@ -1,6 +1,11 @@
 import pickle
+import json
 
-with open('flickr30k_class_name.txt','r') as f:
+cap_flickr30k=json.load(open('../dataset/flickr30/cap_flickr30k.json','r'))
+dic_flickr30k=json.load(open('../dataset/flickr30/dic_flickr30k.json','r'))
+
+
+with open('../dataset/flickr30/flickr30k_class_name.txt','r') as f:
   lines=f.readlines()
 
 tokens_list =[e.strip() for e in lines]
