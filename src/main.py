@@ -31,7 +31,7 @@ def main():
 
 
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    train_dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.train.raw', 'bert-base-uncased', tokenizer, block_size=126)
+    train_dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.test.raw', 'bert-base-uncased', tokenizer, block_size=126)
 
     def collate(examples: List[torch.Tensor]):
         if tokenizer._pad_token is None:
@@ -45,7 +45,7 @@ def main():
 
     global_step = 0
     epochs_trained = 0
-    num_train_epochs = 40
+    num_train_epochs = 5
     mlm_probability =0.15
     warmup_steps = 10000
     gradient_accumulation_steps = 2

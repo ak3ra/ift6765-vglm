@@ -159,15 +159,6 @@ class SimpleBertForMaskedLM_Vis(BertForMaskedLM):
         )
         sequence_output = outputs[0] # token embeddings
 
-        # visual_features = getVisFeature(input_ids)
-        # voken_predictions = self.visual_reg_head(sequence_output)
-        # voken_reg_loss = self.voken_reg_loss_fct(voken_predictions, visual_features)
-        # voken_reg_loss=voken_reg_loss.sum(-1).mean()
-
-        # obj_prediction_scores = self.visual_cls_head(sequence_output)
-        # obj_labels = getVisLabels(input_ids)
-        # visual_cls_loss = self.visual_cls_loss_fct(obj_prediction_scores.view(-1,10),obj_labels.view(-1))
-
         prediction_scores = self.cls(sequence_output)
         loss_fct = CrossEntropyLoss()
         token_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), masked_lm_labels.view(-1))
@@ -183,6 +174,7 @@ class BertForMaskedVisLan(nn.Module):
         super(BertForMaskedVisLan,self).__init__()
         self.bert = AutoModel.from_pre_trained(model_checkpoint)
         self.tokenizer = tokenizer
+        #self.cls = BertOnlyMLMHead(config)
 
         self.do_voken_cls = config.do_voken_cls
         self.do_voken_reg = config.do_voken_reg
@@ -193,7 +185,7 @@ class BertForMaskedVisLan(nn.Module):
         if config.do_voken_reg:
             self.visual_reg_head = BertVLMRegressionHead(config)
             self.voken_reg_loss_fct = nn.SmoothL1Loss(reduction='none')
-        
+
         if config.do_voken_cls:
             self.visual_cls_head = BertVLMClassificationHead(config)
             self.visual_cls_loss_fct = nn.CrossEntropyLoss()
@@ -259,9 +251,9 @@ class BertForMaskedVisLan(nn.Module):
 
             voken_loss += voken_reg_loss
 
-        prediction_scores = self.cls(sequence_output)
-        loss_fct = CrossEntropyLoss()
-        token_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), masked_lm_labels.view(-1))
+        #prediction_scores = self.cls(sequence_output)
+        #loss_fct = CrossEntropyLoss()
+        #token_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), masked_lm_labels.view(-1))
 
         # print(token_loss)
-        return token_loss,voken_loss
+        return voken_loss
