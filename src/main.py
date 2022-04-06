@@ -106,7 +106,7 @@ def main():
 
     global_step = 0
     epochs_trained = 0
-    num_train_epochs = 5
+    num_train_epochs = 50
     mlm_probability =0.15
     warmup_steps = 10000
     gradient_accumulation_steps = 2
@@ -214,7 +214,7 @@ def save_model(name, model, tokenizer, optimizer, scheduler,output_path):
 
 def evaluate(model, tokenizer,mlm=True, prefix="") -> Dict:
 
-    eval_dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.valid.raw', 'bert-base-uncased', tokenizer, block_size=126)
+    eval_dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.train.raw', 'bert-base-uncased', tokenizer, block_size=126)
     eval_batch_size = 32
 
     token_2_feature_flickr30k = pickle.load(open("/home/mila/a/akeraben/scratch/akera/vision_language/ift675-vglm/data_to_share/token_2_feature_flick30k.p", "rb" ) )
