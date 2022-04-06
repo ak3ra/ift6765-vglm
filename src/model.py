@@ -62,7 +62,6 @@ def mask_tokens(inputs, tokenizer,mlm_probability=0.15):
 class CoLBertConfig(BertConfig):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.voken_size = None
         self.num_class = None
         self.voken_dim = None
         self.do_voken_cls = False
@@ -221,7 +220,7 @@ class BertForMaskedVisLan(nn.Module):
         if self.do_voken_cls:
             assert voken_labels is not None
             voken_scores = self.visual_cls_head(sequence_output)
-            voken_cls_loss = self.voken_cls_loss_fct(voken_scores.view(-1, self.config.voken_size), voken_labels.view(-1))
+            voken_cls_loss = self.voken_cls_loss_fct(voken_scores.view(-1, self.config.num_class), voken_labels.view(-1))
             voken_loss += voken_cls_loss
 
         if self.do_voken_reg:
