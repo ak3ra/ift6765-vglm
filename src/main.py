@@ -20,6 +20,8 @@ from transformers import (
 from data import CoLDataset
 from model import CoLBertConfig, SimpleBertForMaskedLM_Vis, getVisFeature, mask_tokens
 import wandb
+import pickle
+
 wandb.init(project="vglm")
 
 logger = logging.getLogger(__name__)
@@ -28,9 +30,32 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print('Using device:', device)
 
 def getVisFeature(input_ids):
-  batch_size = input_ids.shape[0]
-  block_size = input_ids.shape[1]
-  return torch.ones(batch_size,block_size,1024)
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    token_2_feature_flickr30k = pickle.load(open("/home/mila/a/akeraben/scratch/akera/vision_language/ift675-vglm/data_to_share/token_2_feature_flick30k.p", "rb" ) )
+    token_id_2_feature_flickr30k={}
+    for token in token_2_feature_flickr30k.keys():
+        token_id = tokenizer.encode(token,add_special_tokens=False)[0]
+        token_id_2_feature_flickr30k[token_id]=token_2_feature_flickr30k[token]
+  
+    vis_features = []
+    input_ids = input_ids.reshape(-1,1).squeeze()
+
+
+    for input_id in input_ids:
+        print(input_ids)
+        input_id = input_id.item()
+        if input_id in token_id_2_feature_flickr30k.keys():
+            vis_features.append(token_id_2_feature_flickr30k[input_id])
+        else:
+            
+    # print(token_id_2_feature_flickr30k.values())
+    # print(type(token_id_2_feature_flickr30k.values()))
+    import pdb;pdb.set_trace()
+
+
+    batch_size = input_ids.shape[0]
+    block_size = input_ids.shape[1]
+    return torch.ones(batch_size,block_size,1024)
 
 def getVisLabels(input_ids):
    batch_size = input_ids.shape[0]
@@ -107,6 +132,7 @@ def main():
             inputs, labels = mask_tokens(batch, tokenizer, mlm_probability) if mlm_probability else (batch, batch)
             voken_labels = getVisLabels(labels)
             voken_features = getVisFeature(labels)
+            
 
             inputs = inputs.to(device)
             labels = labels.to(device)
