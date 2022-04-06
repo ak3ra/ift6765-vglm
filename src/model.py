@@ -176,12 +176,13 @@ class BertForMaskedVisLan(nn.Module):
         super(BertForMaskedVisLan,self).__init__()
         self.bert = AutoModel.from_pretrained(model_checkpoint)
         self.tokenizer = tokenizer
+        self.config = config
         #self.cls = BertOnlyMLMHead(config)
 
         self.do_voken_cls = config.do_voken_cls
         self.do_voken_reg = config.do_voken_reg
 
-        weighting = torch.ones(config.num_class+1)
+        weighting = torch.ones(config.num_class)
         weighting[-1] = 0
 
         self.voken_cls_loss_fct = CrossEntropyLoss(weight=weighting)
@@ -226,7 +227,6 @@ class BertForMaskedVisLan(nn.Module):
         if self.do_voken_cls:
             assert voken_labels is not None
             voken_scores = self.visual_cls_head(sequence_output)
-            import pdb;pdb.set_trace()
             voken_cls_loss = self.voken_cls_loss_fct(voken_scores.view(-1, self.config.num_class), voken_labels.view(-1))
             voken_loss += voken_cls_loss
 
@@ -234,6 +234,8 @@ class BertForMaskedVisLan(nn.Module):
             assert voken_features is not None
             assert voken_labels is not None
 
+            import pdb; pdb.set_trace()
+            
             voken_predictions = self.visual_reg_head(sequence_output)
             voken_reg_loss = self.voken_reg_loss_fct(voken_predictions, voken_features)
             voken_reg_loss=voken_reg_loss.sum(-1).mean()
