@@ -30,9 +30,8 @@ logger = logging.getLogger(__name__)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print('Using device:', device)
 
-def getVisFeature(input_ids):
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    token_2_feature_flickr30k = pickle.load(open("/home/mila/a/akeraben/scratch/akera/vision_language/ift675-vglm/data_to_share/token_2_feature_flick30k.p", "rb" ) )
+def getVisFeature(input_ids,tokenizer,token_2_feature_flickr30k):
+   
     token_id_2_feature_flickr30k={}
     for token in token_2_feature_flickr30k.keys():
         token_id = tokenizer.encode(token,add_special_tokens=False)[0]
@@ -43,20 +42,22 @@ def getVisFeature(input_ids):
 
 
     for input_id in input_ids:
-        print(input_ids)
         input_id = input_id.item()
         if input_id in token_id_2_feature_flickr30k.keys():
-            vis_features.append(token_id_2_feature_flickr30k[input_id])
+            vis_feature_id = token_id_2_feature_flickr30k[input_id].squeeze() #  A (1024,) tensor
+            vis_features.append(vis_feature_id)
         else:
+            vis_features.append(torch.zeros(1024)-1)
             
     # print(token_id_2_feature_flickr30k.values())
     # print(type(token_id_2_feature_flickr30k.values()))
     import pdb;pdb.set_trace()
 
-
     batch_size = input_ids.shape[0]
     block_size = input_ids.shape[1]
-    return torch.ones(batch_size,block_size,1024)
+    vis_features = torch.stack(vis_features) # batch*block_size, 1024
+    vis_features = vis_features.reshape(batch_size,block_size,1024)
+    return vis_features
 
 def getVisLabels(input_ids,le):
 
@@ -81,7 +82,7 @@ def main():
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     train_dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.test.raw', 'bert-base-uncased', tokenizer, block_size=126)
    
-    token_2_feature_flickr30k = pickle.load( open( "token_2_feature_flick30k.p", "rb" ) )
+    token_2_feature_flickr30k = pickle.load(open("/home/mila/a/akeraben/scratch/akera/vision_language/ift675-vglm/data_to_share/token_2_feature_flick30k.p", "rb" ) )
     token_id_2_feature_flickr30k={}
     for token in token_2_feature_flickr30k.keys():
         token_id = tokenizer.encode(token,add_special_tokens=False)[0]
@@ -155,9 +156,9 @@ def main():
         for step, batch in enumerate(epoch_iterator):
 
             inputs, labels = mask_tokens(batch, tokenizer, mlm_probability) if mlm_probability else (batch, batch)
-            voken_labels = getVisLabels(labels)
+            voken_labels = getVisFeature(labels,tokenizer,token_2_feature_flickr30k)
 
-            voken_features = getVisFeature(labels,le)
+            voken_features = getVisLabels(labels,le)
             voken_features.to(device)
 
             inputs = inputs.to(device)
