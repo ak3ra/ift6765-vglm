@@ -71,7 +71,7 @@ def getVisLabels(input_ids,le):
      if input_id in le.classes_:
        vis_labels.append(le.transform([input_id])[0])
      else:
-       vis_labels.append(len(le.classes_)+1)
+       vis_labels.append(len(le.classes_))
 
    vis_labels = torch.tensor(vis_labels).reshape(batch_size,-1)
    return vis_labels
@@ -100,7 +100,7 @@ def main():
 
 
     config = CoLBertConfig.from_pretrained('./vokenization/vlm/configs/bert-6L-512H.json', cache_dir='./test',
-                                        num_class=len(le.classes_)+1,voken_dim=1024)
+                                        num_class=len(le.classes_)+1,voken_dim=1024,do_voken_cls=True,do_voken_reg=False)
     model = BertForMaskedVisLan(model_checkpoint='bert-base-uncased',config=config,tokenizer=tokenizer)
     model.to(device)
 
@@ -156,11 +156,12 @@ def main():
         for step, batch in enumerate(epoch_iterator):
 
             inputs, labels = mask_tokens(batch, tokenizer, mlm_probability) if mlm_probability else (batch, batch)
-            voken_labels = getVisFeature(labels,tokenizer,token_2_feature_flickr30k)
 
-            voken_features = getVisLabels(labels,le)
+            voken_features = getVisFeature(labels,tokenizer,token_2_feature_flickr30k)
+            voken_labels = getVisLabels(labels,le)
+
             voken_features.to(device)
-
+            voken_labels.to(device)
             inputs = inputs.to(device)
             labels = labels.to(device)
             # If some of the input is padded, then the attention mask is needed

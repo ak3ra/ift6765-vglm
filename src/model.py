@@ -67,8 +67,8 @@ class CoLBertConfig(BertConfig):
         self.do_voken_cls = False
         self.do_voken_reg = False
         # self.do_voken_ctr = False
-        self.shared_head = False
-        self.verbose = False
+        # self.shared_head = False
+        self.verbose = True
 
 
 def getVisFeature(input_ids):
@@ -90,6 +90,9 @@ class BertVLMRegressionHead(nn.Module):
         self.dense = torch.nn.Linear(config.hidden_size, config.hidden_size)
         self.layer_norm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps)
         self.decoder = torch.nn.Linear(config.hidden_size, config.voken_dim, bias=True)
+        if config.verbose:
+            print(f"Visual Feature Regression Head: Build model with voken_dim {config.voken_dim}")
+
 
     def forward(self, features, **kwargs):
         x = self.dense(features)
@@ -178,7 +181,10 @@ class BertForMaskedVisLan(nn.Module):
         self.do_voken_cls = config.do_voken_cls
         self.do_voken_reg = config.do_voken_reg
 
-        self.token_cls_loss_fct = CrossEntropyLoss()
+        weighting = torch.ones(config.num_class+1)
+        weighting[-1] = 0
+
+        self.voken_cls_loss_fct = CrossEntropyLoss(weight=weighting)
 
         if config.do_voken_reg:
             self.visual_reg_head = BertVLMRegressionHead(config)
@@ -220,6 +226,7 @@ class BertForMaskedVisLan(nn.Module):
         if self.do_voken_cls:
             assert voken_labels is not None
             voken_scores = self.visual_cls_head(sequence_output)
+            import pdb;pdb.set_trace()
             voken_cls_loss = self.voken_cls_loss_fct(voken_scores.view(-1, self.config.num_class), voken_labels.view(-1))
             voken_loss += voken_cls_loss
 
