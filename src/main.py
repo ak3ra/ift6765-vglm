@@ -237,6 +237,13 @@ def evaluate(model, tokenizer,mlm=True, prefix="") -> Dict:
 
     for batch in tqdm(eval_dataloader, desc="Evaluating"):
         inputs, labels = mask_tokens(batch, tokenizer) if mlm else (batch, batch)
+        voken_features = getVisFeature(labels,tokenizer,token_2_feature_flickr30k)
+        voken_labels = getVisLabels(labels,le)
+
+        voken_features = voken_features.to(device)
+        voken_labels = voken_labels.to(device)
+
+
         inputs = inputs.to(device)
         labels = labels.to(device)
         # If some of the input is padded, then the attention mask is needed
@@ -245,7 +252,7 @@ def evaluate(model, tokenizer,mlm=True, prefix="") -> Dict:
             attention_mask = None
 
         with torch.no_grad():
-            outputs = model(inputs, attention_mask=attention_mask, masked_lm_labels=labels) if mlm else model(inputs, labels=labels)
+            outputs = model(inputs, attention_mask=attention_mask, masked_lm_labels=labels,voken_labels=voken_labels,voken_features=voken_features) if mlm else model(inputs, labels=labels)
             lm_loss = outputs
             eval_loss += lm_loss.mean().item()
         nb_eval_steps += 1
