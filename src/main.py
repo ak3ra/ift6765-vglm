@@ -3,6 +3,7 @@ import torch
 import os
 import torch
 import logging
+import pickle
 
 from torch.utils.data import DataLoader
 from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampler
@@ -18,7 +19,7 @@ from transformers import (
 )
 
 from data import CoLDataset
-from model import CoLBertConfig, SimpleBertForMaskedLM_Vis, getVisFeature, mask_tokens
+from model import CoLBertConfig, SimpleBertForMaskedLM_Vis, getVisFeature, mask_tokens,BertForMaskedVisLan
 import wandb
 import pickle
 
@@ -57,16 +58,39 @@ def getVisFeature(input_ids):
     block_size = input_ids.shape[1]
     return torch.ones(batch_size,block_size,1024)
 
-def getVisLabels(input_ids):
+def getVisLabels(input_ids,le):
+
    batch_size = input_ids.shape[0]
-   block_size = input_ids.shape[1]
-   return torch.ones(batch_size,block_size,dtype=torch.long)
+   input_ids = input_ids.reshape(-1,1).squeeze()
+
+   vis_labels = []
+
+   for input_id in input_ids:
+     input_id = input_id.item()
+     if input_id in le.classes_:
+       vis_labels.append(le.transform([input_id])[0])
+     else:
+       vis_labels.append(len(le.classes_)+1)
+
+   vis_labels = torch.tensor(vis_labels).reshape(batch_size,-1)
+   return vis_labels
 
 def main():
 
 
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     train_dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.test.raw', 'bert-base-uncased', tokenizer, block_size=126)
+   
+    token_2_feature_flickr30k = pickle.load( open( "token_2_feature_flick30k.p", "rb" ) )
+    token_id_2_feature_flickr30k={}
+    for token in token_2_feature_flickr30k.keys():
+        token_id = tokenizer.encode(token,add_special_tokens=False)[0]
+        token_id_2_feature_flickr30k[token_id]=token_2_feature_flickr30k[token]
+    token_list = list(token_id_2_feature_flickr30k.keys())
+    from sklearn.preprocessing import LabelEncoder
+    le = LabelEncoder();
+    le.fit_transform(token_list);
+
 
     def collate(examples: List[torch.Tensor]):
         if tokenizer._pad_token is None:
@@ -74,8 +98,9 @@ def main():
         return pad_sequence(examples, batch_first=True, padding_value=tokenizer.pad_token_id)
 
 
-    config = CoLBertConfig.from_pretrained('./vokenization/vlm/configs/bert-6L-512H.json', cache_dir='./test',voken_dim=1024)
-    model = SimpleBertForMaskedLM_Vis(config=config,tokenizer=tokenizer)
+    config = CoLBertConfig.from_pretrained('./vokenization/vlm/configs/bert-6L-512H.json', cache_dir='./test',
+                                        num_class=len(le.classes_)+1,voken_dim=1024)
+    model = BertForMaskedVisLan(model_check_point='bert-base-uncased',config=config,tokenizer=tokenizer)
     model.to(device)
 
     global_step = 0
@@ -131,8 +156,9 @@ def main():
 
             inputs, labels = mask_tokens(batch, tokenizer, mlm_probability) if mlm_probability else (batch, batch)
             voken_labels = getVisLabels(labels)
-            voken_features = getVisFeature(labels)
-            
+
+            voken_features = getVisFeature(labels,le)
+            voken_features.to(device)
 
             inputs = inputs.to(device)
             labels = labels.to(device)
@@ -233,3 +259,5 @@ def evaluate(model, tokenizer,mlm=True, prefix="") -> Dict:
 
 if __name__ == '__main__':
     main()
+
+#test
