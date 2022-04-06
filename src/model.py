@@ -234,10 +234,13 @@ class BertForMaskedVisLan(nn.Module):
             assert voken_features is not None
             assert voken_labels is not None
 
-            import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
+
             
             voken_predictions = self.visual_reg_head(sequence_output)
-            voken_reg_loss = self.voken_reg_loss_fct(voken_predictions, voken_features)
+            # voken_reg_loss = self.voken_reg_loss_fct(voken_predictions, voken_features)
+            voken_reg_loss = self.voken_reg_loss_fct(voken_predictions[voken_labels!=self.config.num_class-1], voken_features[voken_labels!=self.config.num_class-1])
+
             voken_reg_loss=voken_reg_loss.sum(-1).mean()
             # voken_prediction = self.visual_reg_head(sequence_output)
 

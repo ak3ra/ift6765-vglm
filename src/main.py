@@ -205,7 +205,8 @@ def save_model(name, model, tokenizer, optimizer, scheduler,output_path):
     model_to_save = (
         model.module if hasattr(model, "module") else model
     )  # Take care of distributed/parallel training
-    model_to_save.save_pretrained(output_dir)
+    # model_to_save.save(output_dir)
+    torch.save(model_to_save.state_dict(), output_dir + '/model.pt')
     tokenizer.save_pretrained(output_dir)
 
     # torch.save(os.path.join(output_dir, "training_args.bin"))
