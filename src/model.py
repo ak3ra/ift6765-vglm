@@ -171,7 +171,7 @@ class BertForMaskedVisLan(nn.Module):
 
     def __init__(self, model_checkpoint,config,tokenizer):
         super(BertForMaskedVisLan,self).__init__()
-        self.bert = AutoModel.from_pre_trained(model_checkpoint)
+        self.bert = AutoModel.from_pretrained(model_checkpoint)
         self.tokenizer = tokenizer
         #self.cls = BertOnlyMLMHead(config)
 
