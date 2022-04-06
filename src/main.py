@@ -99,9 +99,9 @@ def main():
 
     # bert-medium: google/bert_uncased_L-8_H-512_A-8
     # bert-small: google/bert_uncased_L-4_H-512_A-8
-    # bert-mini: google/bert_uncased_L-4_H-256_A-4
+    # bert-mini: google/bert_uncased_L-4_H-256_A-4 
 
-    config = CoLBertConfig.from_pretrained('./data_configs/bert_mini.json', cache_dir='./test',
+    config = CoLBertConfig.from_pretrained('./ift675-vglm/data_configs/bert_mini.json', cache_dir='./test',
                                         num_class=len(le.classes_)+1,voken_dim=1024,do_voken_cls=True,do_voken_reg=True)
     model = BertForMaskedVisLan(model_checkpoint='google/bert_uncased_L-4_H-256_A-4',config=config,tokenizer=tokenizer)
     model.to(device)
@@ -111,13 +111,14 @@ def main():
     num_train_epochs = 5
     mlm_probability =0.15
     warmup_steps = 10000
-    gradient_accumulation_steps = 2
+    gradient_accumulation_steps = 1
     t_total = num_train_epochs*gradient_accumulation_steps
     max_grad_norm = 1.0
     adam_epsilon = 1e-6
     output_path = "./output"
     shuffle = True
     mlm = True
+    train_batch_size = 128
 
     train_sampler = RandomSampler(
             train_dataset
@@ -125,7 +126,7 @@ def main():
 
     train_dataloader=DataLoader(
         train_dataset, shuffle=False, num_workers=0,
-        batch_size=64, pin_memory=True, sampler=train_sampler
+        batch_size=train_batch_size, pin_memory=True, sampler=train_sampler
     )
 
         # Prepare optimizer and schedule (linear warmup and decay)
@@ -183,15 +184,17 @@ def main():
             # logger.info(" Training loss : %0.4f" % (loss.item()))
 
             tr_loss += loss.item()
-            print(loss.item())
-            if (step + 1) % gradient_accumulation_steps == 0:
-                if max_grad_norm > 0.:
-                    total_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
-                optimizer.step()
-                scheduler.step()  # Update learning rate schedule
-                model.zero_grad()
-                global_step += 1
-        wandb.log({'training loss': loss.item()})
+            # print(loss.item())
+            # if (step + 1) % gradient_accumulation_steps == 0:
+            #     if max_grad_norm > 0.:
+            #         total_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
+            #     optimizer.step()
+            #     scheduler.step()  # Update learning rate schedule
+            #     model.zero_grad()
+            #     global_step += 1
+        # wandb.log({'training loss': loss.item()})
+        wandb.log({'training loss': tr_loss/(step+1)})
+
 
 
 
