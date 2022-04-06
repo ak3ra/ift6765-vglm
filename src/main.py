@@ -37,6 +37,9 @@ def getVisFeature(input_ids,tokenizer,token_2_feature_flickr30k):
         token_id = tokenizer.encode(token,add_special_tokens=False)[0]
         token_id_2_feature_flickr30k[token_id]=token_2_feature_flickr30k[token]
   
+    batch_size = input_ids.shape[0]
+    block_size = input_ids.shape[1]
+
     vis_features = []
     input_ids = input_ids.reshape(-1,1).squeeze()
 
@@ -49,14 +52,11 @@ def getVisFeature(input_ids,tokenizer,token_2_feature_flickr30k):
         else:
             vis_features.append(torch.zeros(1024)-1)
             
-    # print(token_id_2_feature_flickr30k.values())
-    # print(type(token_id_2_feature_flickr30k.values()))
-    import pdb;pdb.set_trace()
 
-    batch_size = input_ids.shape[0]
-    block_size = input_ids.shape[1]
+    
     vis_features = torch.stack(vis_features) # batch*block_size, 1024
     vis_features = vis_features.reshape(batch_size,block_size,1024)
+
     return vis_features
 
 def getVisLabels(input_ids,le):
@@ -101,7 +101,7 @@ def main():
 
     config = CoLBertConfig.from_pretrained('./vokenization/vlm/configs/bert-6L-512H.json', cache_dir='./test',
                                         num_class=len(le.classes_)+1,voken_dim=1024)
-    model = BertForMaskedVisLan(model_check_point='bert-base-uncased',config=config,tokenizer=tokenizer)
+    model = BertForMaskedVisLan(model_checkpoint='bert-base-uncased',config=config,tokenizer=tokenizer)
     model.to(device)
 
     global_step = 0
