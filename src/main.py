@@ -99,7 +99,7 @@ def main():
         return pad_sequence(examples, batch_first=True, padding_value=tokenizer.pad_token_id)
 
 
-    config = CoLBertConfig.from_pretrained('./vokenization/vlm/configs/bert-6L-512H.json', cache_dir='./test',
+    config = CoLBertConfig.from_pretrained('./vokenization/vlm/configs/bert-base.json', cache_dir='./test',
                                         num_class=len(le.classes_)+1,voken_dim=1024,do_voken_cls=True,do_voken_reg=False)
     model = BertForMaskedVisLan(model_checkpoint='bert-base-uncased',config=config,tokenizer=tokenizer)
     model.to(device)
