@@ -17,7 +17,7 @@ from transformers import (
     AutoModelForMaskedLM,
     BertConfig,
     BertForMaskedLM,
-
+    PreTrainedModel
 )
 
 
@@ -170,10 +170,10 @@ class SimpleBertForMaskedLM_Vis(BertForMaskedLM):
 
 
 
-class BertForMaskedVisLan(nn.Module):
+class BertForMaskedVisLan(PreTrainedModel):
 
     def __init__(self, model_checkpoint,config,tokenizer):
-        super(BertForMaskedVisLan,self).__init__()
+        super(BertForMaskedVisLan,self).__init__(config)
         self.bert = AutoModel.from_pretrained(model_checkpoint)
         self.tokenizer = tokenizer
         self.config = config
