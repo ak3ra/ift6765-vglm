@@ -181,7 +181,6 @@ class BertForMaskedVisLan(nn.Module):
 
         self.token_cls_loss_fct = CrossEntropyLoss()
 
-
         if config.do_voken_reg:
             self.visual_reg_head = BertVLMRegressionHead(config)
             self.voken_reg_loss_fct = nn.SmoothL1Loss(reduction='none')
@@ -202,8 +201,9 @@ class BertForMaskedVisLan(nn.Module):
             encoder_hidden_states=None,
             encoder_attention_mask=None,
             lm_labels=None,
-            voken_labels=None,
-            voken_features=None,
+            voken_labels = None,
+            voken_features=None
+            
     ):
         outputs = self.bert(
             input_ids,
@@ -228,7 +228,6 @@ class BertForMaskedVisLan(nn.Module):
             assert voken_features is not None
             assert voken_labels is not None
 
-            # visual_features = getVisFeature(input_ids)
             voken_predictions = self.visual_reg_head(sequence_output)
             voken_reg_loss = self.voken_reg_loss_fct(voken_predictions, voken_features)
             voken_reg_loss=voken_reg_loss.sum(-1).mean()

@@ -18,7 +18,7 @@ from transformers import (
 )
 
 from data import CoLDataset
-from model import CoLBertConfig, SimpleBertForMaskedLM_Vis, mask_tokens
+from model import CoLBertConfig, SimpleBertForMaskedLM_Vis, getVisFeature, mask_tokens
 import wandb
 wandb.init(project="vglm")
 
@@ -26,6 +26,16 @@ logger = logging.getLogger(__name__)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print('Using device:', device)
+
+def getVisFeature(input_ids):
+  batch_size = input_ids.shape[0]
+  block_size = input_ids.shape[1]
+  return torch.ones(batch_size,block_size,1024)
+
+def getVisLabels(input_ids):
+   batch_size = input_ids.shape[0]
+   block_size = input_ids.shape[1]
+   return torch.ones(batch_size,block_size,dtype=torch.long)
 
 def main():
 
@@ -95,6 +105,9 @@ def main():
         for step, batch in enumerate(epoch_iterator):
 
             inputs, labels = mask_tokens(batch, tokenizer, mlm_probability) if mlm_probability else (batch, batch)
+            voken_labels = getVisLabels(labels)
+            voken_features = getVisFeature(labels)
+
             inputs = inputs.to(device)
             labels = labels.to(device)
             # If some of the input is padded, then the attention mask is needed
@@ -105,7 +118,7 @@ def main():
             model.train()
             outputs = model(inputs,
                             attention_mask=attention_mask,
-                            masked_lm_labels=labels) if mlm_probability else model(inputs, labels=labels)
+                            masked_lm_labels=labels,voken_labels=voken_labels,voken_features=voken_features) if mlm_probability else model(inputs, labels=labels)
             loss = outputs  # model outputs are always tuple in transformers (see doc)
 
             loss.backward()
