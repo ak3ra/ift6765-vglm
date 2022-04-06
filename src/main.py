@@ -100,10 +100,11 @@ def main():
     # bert-medium: google/bert_uncased_L-8_H-512_A-8
     # bert-small: google/bert_uncased_L-4_H-512_A-8
     # bert-mini: google/bert_uncased_L-4_H-256_A-4 
+    # bert-tiny: google/bert_uncased_L-2_H-128_A-2
 
-    config = CoLBertConfig.from_pretrained('./ift675-vglm/data_configs/bert_mini.json', cache_dir='./test',
+    config = CoLBertConfig.from_pretrained('./ift675-vglm/data_configs/bert_tiny.json', cache_dir='./test',
                                         num_class=len(le.classes_)+1,voken_dim=1024,do_voken_cls=True,do_voken_reg=True)
-    model = BertForMaskedVisLan(model_checkpoint='google/bert_uncased_L-4_H-256_A-4',config=config,tokenizer=tokenizer)
+    model = BertForMaskedVisLan(model_checkpoint='google/bert_uncased_L-2_H-128_A-2',config=config,tokenizer=tokenizer)
     model.to(device)
 
     global_step = 0
