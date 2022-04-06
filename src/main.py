@@ -81,7 +81,7 @@ def main():
     train_dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.test.raw', 'bert-base-uncased', tokenizer, block_size=126)
    
    # get the object class label encoder
-    token_2_feature_flickr30k = pickle.load(open("/home/mila/a/akeraben/scratch/akera/vision_language/ift675-vglm/data_to_share/token_2_feature_flick30k.p", "rb" ) )
+    token_2_feature_flickr30k = pickle.load(open("/home/mila/a/akeraben/scratch/akera/vision_language/ift675-vglm/data_configs/token_2_feature_flick30k.p", "rb" ) )
     token_id_2_feature_flickr30k={}
     for token in token_2_feature_flickr30k.keys():
         token_id = tokenizer.encode(token,add_special_tokens=False)[0]
@@ -226,7 +226,7 @@ def evaluate(model, tokenizer,mlm=True, prefix="") -> Dict:
     eval_dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.valid.raw', 'bert-base-uncased', tokenizer, block_size=126)
     eval_batch_size = 32
 
-    token_2_feature_flickr30k = pickle.load(open("/home/mila/a/akeraben/scratch/akera/vision_language/ift675-vglm/data_to_share/token_2_feature_flick30k.p", "rb" ) )
+    token_2_feature_flickr30k = pickle.load(open("/home/mila/a/akeraben/scratch/akera/vision_language/ift675-vglm/data_configs/token_2_feature_flick30k.p", "rb" ) )
     token_id_2_feature_flickr30k={}
     for token in token_2_feature_flickr30k.keys():
         token_id = tokenizer.encode(token,add_special_tokens=False)[0]
