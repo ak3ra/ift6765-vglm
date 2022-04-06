@@ -51,9 +51,7 @@ def getVisFeature(input_ids,tokenizer,token_2_feature_flickr30k):
             vis_features.append(vis_feature_id)
         else:
             vis_features.append(torch.zeros(1024)-1)
-            
-
-    
+                
     vis_features = torch.stack(vis_features) # batch*block_size, 1024
     vis_features = vis_features.reshape(batch_size,block_size,1024)
 
@@ -82,6 +80,7 @@ def main():
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     train_dataset=CoLDataset('./vokenization/data/wiki103-cased/wiki.test.raw', 'bert-base-uncased', tokenizer, block_size=126)
    
+   # get the object class label encoder
     token_2_feature_flickr30k = pickle.load(open("/home/mila/a/akeraben/scratch/akera/vision_language/ift675-vglm/data_to_share/token_2_feature_flick30k.p", "rb" ) )
     token_id_2_feature_flickr30k={}
     for token in token_2_feature_flickr30k.keys():
@@ -98,6 +97,9 @@ def main():
             return pad_sequence(examples, batch_first=True)
         return pad_sequence(examples, batch_first=True, padding_value=tokenizer.pad_token_id)
 
+    # bert-medium: google/bert_uncased_L-8_H-512_A-8
+    # bert-small: google/bert_uncased_L-4_H-512_A-8
+    # bert-mini: google/bert_uncased_L-4_H-256_A-4
 
     config = CoLBertConfig.from_pretrained('./vokenization/vlm/configs/bert_base.json', cache_dir='./test',
                                         num_class=len(le.classes_)+1,voken_dim=1024,do_voken_cls=True,do_voken_reg=True)
@@ -205,9 +207,16 @@ def save_model(name, model, tokenizer, optimizer, scheduler,output_path):
     model_to_save = (
         model.module if hasattr(model, "module") else model
     )  # Take care of distributed/parallel training
-    # model_to_save.save(output_dir)
-    torch.save(model_to_save.state_dict(), output_dir + '/model.pt')
+    model_to_save.save_pretrained(output_dir)
     tokenizer.save_pretrained(output_dir)
+
+    # os.makedirs(output_dir, exist_ok=True)
+    # model_to_save = (
+    #     model.module if hasattr(model, "module") else model
+    # )  # Take care of distributed/parallel training
+    # # model_to_save.save(output_dir)
+    # torch.save(model_to_save.state_dict(), output_dir + '/model.pt')
+    # tokenizer.save_pretrained(output_dir)
 
     # torch.save(os.path.join(output_dir, "training_args.bin"))
     logger.info("Saving model checkpoint to %s", output_dir)
