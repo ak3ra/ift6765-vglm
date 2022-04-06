@@ -160,8 +160,8 @@ def main():
             voken_features = getVisFeature(labels,tokenizer,token_2_feature_flickr30k)
             voken_labels = getVisLabels(labels,le)
 
-            voken_features.to(device)
-            voken_labels.to(device)
+            voken_features = voken_features.to(device)
+            voken_labels = voken_labels.to(device)
             inputs = inputs.to(device)
             labels = labels.to(device)
             # If some of the input is padded, then the attention mask is needed
@@ -205,7 +205,7 @@ def save_model(name, model, tokenizer, optimizer, scheduler,output_path):
     model_to_save = (
         model.module if hasattr(model, "module") else model
     )  # Take care of distributed/parallel training
-    model_to_save.save_pretrained(output_dir)
+    model_to_save.save_pretrained(output_dir+'')
     tokenizer.save_pretrained(output_dir)
 
     # torch.save(os.path.join(output_dir, "training_args.bin"))
