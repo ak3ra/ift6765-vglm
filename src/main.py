@@ -99,8 +99,8 @@ def main():
         return pad_sequence(examples, batch_first=True, padding_value=tokenizer.pad_token_id)
 
 
-    config = CoLBertConfig.from_pretrained('./vokenization/vlm/configs/bert-base.json', cache_dir='./test',
-                                        num_class=len(le.classes_)+1,voken_dim=1024,do_voken_cls=True,do_voken_reg=False)
+    config = CoLBertConfig.from_pretrained('./vokenization/vlm/configs/bert_base.json', cache_dir='./test',
+                                        num_class=len(le.classes_)+1,voken_dim=1024,do_voken_cls=True,do_voken_reg=True)
     model = BertForMaskedVisLan(model_checkpoint='bert-base-uncased',config=config,tokenizer=tokenizer)
     model.to(device)
 
@@ -205,7 +205,8 @@ def save_model(name, model, tokenizer, optimizer, scheduler,output_path):
     model_to_save = (
         model.module if hasattr(model, "module") else model
     )  # Take care of distributed/parallel training
-    model_to_save.save_pretrained(output_dir+'')
+    # model_to_save.save(output_dir)
+    torch.save(model_to_save.state_dict(), output_dir + '/model.pt')
     tokenizer.save_pretrained(output_dir)
 
     # torch.save(os.path.join(output_dir, "training_args.bin"))
