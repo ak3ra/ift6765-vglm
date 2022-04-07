@@ -109,14 +109,14 @@ def main():
 
     global_step = 0
     epochs_trained = 0
-    num_train_epochs = 5
+    num_train_epochs = 3
     mlm_probability =0.15
     warmup_steps = 10000
     gradient_accumulation_steps = 1
     t_total = num_train_epochs*gradient_accumulation_steps
     max_grad_norm = 1.0
     adam_epsilon = 1e-6
-    output_path = "./output"
+    output_path = "./output_tiny"
     shuffle = True
     mlm = True
     train_batch_size = 128

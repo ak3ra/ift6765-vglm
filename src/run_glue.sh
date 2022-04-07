@@ -1,7 +1,7 @@
 export TASK_NAME=mrpc
 
 python run_glue.py \
-  --model_name_or_path bert-base-cased \
+  --model_name_or_path ~/scratch/akera/vision_language/output/checkpoint-epoch0003 \
   --task_name $TASK_NAME \
   --do_train \
   --do_eval \
@@ -9,4 +9,4 @@ python run_glue.py \
   --per_device_train_batch_size 32 \
   --learning_rate 2e-5 \
   --num_train_epochs 3 \
-  --output_dir /tmp/$TASK_NAME/
+  --output_dir /home/mila/a/akeraben/scratch/akera/vision_language/output/$TASK_NAME/
