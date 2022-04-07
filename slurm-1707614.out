@@ -1,0 +1,90 @@
+
+======== GPU REPORT ========
+
+==============NVSMI LOG==============
+
+Timestamp                                 : Wed Apr  6 17:54:53 2022
+Driver Version                            : 460.106.00
+CUDA Version                              : 11.2
+
+Attached GPUs                             : 1
+GPU 00000000:A4:00.0
+    Accounting Mode                       : Enabled
+    Accounting Mode Buffer Size           : 4000
+    Accounted Processes
+        Process ID                        : 39306
+            GPU Utilization               : 0 %
+            Memory Utilization            : 0 %
+            Max memory usage              : 10085 MiB
+            Time                          : 0 ms
+            Is Running                    : 1
+        Process ID                        : 39898
+            GPU Utilization               : 0 %
+            Memory Utilization            : 0 %
+            Max memory usage              : 10065 MiB
+            Time                          : 0 ms
+            Is Running                    : 1
+        Process ID                        : 43566
+            GPU Utilization               : 0 %
+            Memory Utilization            : 0 %
+            Max memory usage              : 2391 MiB
+            Time                          : 0 ms
+            Is Running                    : 1
+        Process ID                        : 44807
+            GPU Utilization               : 0 %
+            Memory Utilization            : 0 %
+            Max memory usage              : 2391 MiB
+            Time                          : 0 ms
+            Is Running                    : 1
+        Process ID                        : 45482
+            GPU Utilization               : 0 %
+            Memory Utilization            : 0 %
+            Max memory usage              : 3261 MiB
+            Time                          : 0 ms
+            Is Running                    : 1
+        Process ID                        : 46067
+            GPU Utilization               : 0 %
+            Memory Utilization            : 0 %
+            Max memory usage              : 3261 MiB
+            Time                          : 0 ms
+            Is Running                    : 1
+        Process ID                        : 46476
+            GPU Utilization               : 0 %
+            Memory Utilization            : 0 %
+            Max memory usage              : 3261 MiB
+            Time                          : 0 ms
+            Is Running                    : 1
+        Process ID                        : 49402
+            GPU Utilization               : 0 %
+            Memory Utilization            : 0 %
+            Max memory usage              : 2015 MiB
+            Time                          : 0 ms
+            Is Running                    : 1
+
+Wed Apr  6 17:54:54 2022       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 460.106.00   Driver Version: 460.106.00   CUDA Version: 11.2     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Quadro RTX 8000     On   | 00000000:A4:00.0 Off |                  Off |
+| 33%   30C    P2    68W / 260W |  36733MiB / 48601MiB |      3%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|    0   N/A  N/A     39306      C   -                               10085MiB |
+|    0   N/A  N/A     39898      C   -                               10065MiB |
+|    0   N/A  N/A     43566      C   -                                2391MiB |
+|    0   N/A  N/A     44807      C   -                                2391MiB |
+|    0   N/A  N/A     45482      C   -                                3261MiB |
+|    0   N/A  N/A     46067      C   -                                3261MiB |
+|    0   N/A  N/A     46476      C   -                                3261MiB |
+|    0   N/A  N/A     49402      C   -                                2015MiB |
++-----------------------------------------------------------------------------+
